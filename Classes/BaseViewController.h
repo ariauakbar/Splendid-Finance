@@ -12,9 +12,9 @@
 
 @interface BaseViewController : UITabBarController {
 
+    UITableView *tableView;
 	
 }
-
 - (UIViewController *) viewControllerWithTabTitle:(NSString *)title image:(UIImage *)image withTag:(NSInteger)tag;
 
 @end
