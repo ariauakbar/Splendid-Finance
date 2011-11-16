@@ -23,7 +23,8 @@
 - (void)dealloc
 {
     [super dealloc];
-    NSLog(@"aaa");
+    NSLog(@"aaassss");
+    NSLog(@"ssss");
 }
 
 - (void)didReceiveMemoryWarning
