@@ -13,7 +13,7 @@
 @interface BaseViewController : UITabBarController {
 
     UITableView *tableView;
-	
+    UIToolbar *toolbar;
 }
 - (UIViewController *) viewControllerWithTabTitle:(NSString *)title image:(UIImage *)image withTag:(NSInteger)tag;
 
