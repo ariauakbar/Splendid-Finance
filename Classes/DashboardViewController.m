@@ -197,7 +197,7 @@
 	// ****** Expense Button ***** 
     // http://stackoverflow.com/questions/7628004/how-does-uiedgeinsetsmake-works
 	
-	UIButton *expenseButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+	UIButton *expenseButton = [UIButton buttonWithType:UIButtonTypeCustom];
 	expenseButton.frame = CGRectMake(CGRectGetMinX(self.view.frame) + 25.0, 250.0, 273.0, 43.0);
 	[expenseButton setTitle:@"+ Add Expense" forState:UIControlStateNormal];
     expenseButton.titleLabel.font = [UIFont fontWithName:@"HelveticaNeue" size:14];
@@ -207,13 +207,13 @@
     expenseButton.titleLabel.shadowOffset = CGSizeMake(0.0, 1.0);
     expenseButton.titleLabel.shadowColor = [UIColor whiteColor];
 	//[self.view addSubview:expenseButton];
-    UIImage *expenseImage = [UIImage imageNamed:@"xb_normal.png"];
-    //UIImage *expenseImagePressed = [UIImage imageNamed:@"add_expense_button_highlighted_5.png"];
+    UIImage *expenseImage = [UIImage imageNamed:@"add_expense_button_8.png"];
+    UIImage *expenseImagePressed = [UIImage imageNamed:@"add_expense_button_highlighted_5.png"];
     //UIImage *strechableButtonImageExpense = [expenseImage resizableImageWithCapInsets:UIEdgeInsetsMake(0.0, 10.0, 0.0, 35.0)];
     //UIImage *strechableButtonImageExpensePressed = [expenseImagePressed resizableImageWithCapInsets:UIEdgeInsetsMake(20.0, 10.0, 20.0, 10.0)];
     //expenseButton.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     [expenseButton setBackgroundImage:expenseImage forState:UIControlStateNormal];
-    //[expenseButton setBackgroundImage:expenseImagePressed forState:UIControlStateHighlighted];
+    [expenseButton setBackgroundImage:expenseImagePressed forState:UIControlStateHighlighted];
     //[expenseButton setBackgroundImage:strechableButtonImageExpense forState:UIControlStateHighlighted];
 	[expenseButton addTarget:self action:@selector(addExpense) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:expenseButton];
