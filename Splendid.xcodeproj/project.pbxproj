@@ -130,6 +130,7 @@
 		CBAC92C61469AC6500AFB888 /* geo_remove_highlighted_button.png in Resources */ = {isa = PBXBuildFile; fileRef = CBAC92C51469AC6500AFB888 /* geo_remove_highlighted_button.png */; };
 		CBAC92C91469AD8B00AFB888 /* notice_navbar_button.png in Resources */ = {isa = PBXBuildFile; fileRef = CBAC92C71469AD8B00AFB888 /* notice_navbar_button.png */; };
 		CBAC92CA1469AD8B00AFB888 /* notice_navbar_highlighted_button.png in Resources */ = {isa = PBXBuildFile; fileRef = CBAC92C81469AD8B00AFB888 /* notice_navbar_highlighted_button.png */; };
+		CBBB78CF1473C46A00EA7C7E /* xb_normal.png in Resources */ = {isa = PBXBuildFile; fileRef = CBBB78CE1473C46A00EA7C7E /* xb_normal.png */; };
 		CBF4045E14632BC7001D4135 /* body_background.png in Resources */ = {isa = PBXBuildFile; fileRef = CBF4045C14632BC7001D4135 /* body_background.png */; };
 		CBF4045F14632BC7001D4135 /* body_background@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = CBF4045D14632BC7001D4135 /* body_background@2x.png */; };
 		CBF4046214632C9B001D4135 /* button_expense_2.png in Resources */ = {isa = PBXBuildFile; fileRef = CBF4046014632C9B001D4135 /* button_expense_2.png */; };
@@ -302,6 +303,7 @@
 		CBAC92C51469AC6500AFB888 /* geo_remove_highlighted_button.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = geo_remove_highlighted_button.png; sourceTree = "<group>"; };
 		CBAC92C71469AD8B00AFB888 /* notice_navbar_button.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = notice_navbar_button.png; sourceTree = "<group>"; };
 		CBAC92C81469AD8B00AFB888 /* notice_navbar_highlighted_button.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = notice_navbar_highlighted_button.png; sourceTree = "<group>"; };
+		CBBB78CE1473C46A00EA7C7E /* xb_normal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = xb_normal.png; sourceTree = "<group>"; };
 		CBF4045C14632BC7001D4135 /* body_background.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = body_background.png; sourceTree = "<group>"; };
 		CBF4045D14632BC7001D4135 /* body_background@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "body_background@2x.png"; sourceTree = "<group>"; };
 		CBF4046014632C9B001D4135 /* button_expense_2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = button_expense_2.png; sourceTree = "<group>"; };
@@ -541,6 +543,7 @@
 				CB4AF30F146B07FC00D909A0 /* add_expense_button_highlighted_5.png */,
 				CB4AF30D146B06C700D909A0 /* add_expense_button_5.png */,
 				4953B64B141858CA000E5181 /* navbar-.png */,
+				CBBB78CE1473C46A00EA7C7E /* xb_normal.png */,
 				CB4AF30B146B050D00D909A0 /* add_expense_button_4.png */,
 				CB4AF315146B82A000D909A0 /* food_1.png */,
 				CB4AF305146B00E700D909A0 /* add_expense_button.png */,
@@ -780,6 +783,7 @@
 				CB4AF32A146B8EF300D909A0 /* home_6.png in Resources */,
 				CB4AF32C146B8F4600D909A0 /* food_2.png in Resources */,
 				CB4AF32E146B90FF00D909A0 /* food_3.png in Resources */,
+				CBBB78CF1473C46A00EA7C7E /* xb_normal.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
