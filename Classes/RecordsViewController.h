@@ -7,13 +7,16 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "SplendidAppDelegate.h"
 
 
 @interface RecordsViewController : UITableViewController {
 
     NSArray *months;
+    NSManagedObjectContext *managedObjectContext;
 }
 
 @property (nonatomic, retain) NSArray *months;
+@property (nonatomic, retain) NSManagedObjectContext *managedObjectContext;
 
 @end

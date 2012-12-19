@@ -7,9 +7,26 @@
 //
 
 #import "GoalViewController.h"
+#import "AddGoalViewController.h"
+#import "Goal.h"
+#import "DashboardViewController.h"
+#import "SplendidUtils.h"
+#import "Income.h"
+#import "Expense.h"
+#import "GoalDetailTableViewController.h"
 
+
+@interface AddGoalViewController (PrivateMethod)
+- (void) addGoal;
+@end
 
 @implementation GoalViewController
+
+@synthesize goals;
+@synthesize managedObjectContext;
+@synthesize noGoalsLabel;
+@synthesize firstRun;
+@synthesize monthsNeeded;
 
 
 #pragma mark -
@@ -18,29 +35,105 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 	
-	self.view.backgroundColor = [UIColor whiteColor];
+    self.tableView.backgroundColor = [UIColor clearColor];	self.view.backgroundColor = [UIColor clearColor];
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    self.tableView.rowHeight = 50.0;
+    //self.tableView.bounces = NO;
+    self.tableView.backgroundColor = [UIColor clearColor];
+    self.view.backgroundColor = [UIColor clearColor];
+    
+    UIImage *bodyImage = [UIImage imageNamed:@"body_background.png"];
+	UIImageView *bodyImageView = [[UIImageView alloc] initWithImage:bodyImage];
+	bodyImageView.frame = self.view.bounds;
 	
-	UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 100, 44)];
+	[self.navigationController.view addSubview:bodyImageView];
+    [self.navigationController.view sendSubviewToBack:bodyImageView];
+    [bodyImageView release];
+	
+    UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 150, 44)];
 	titleLabel.textAlignment = UITextAlignmentCenter;
-	titleLabel.shadowColor = [UIColor blackColor];
-	titleLabel.shadowOffset = CGSizeMake(0, -1);
-	[titleLabel setText:@"Goal"];
-	titleLabel.textColor = [UIColor whiteColor];
+	titleLabel.shadowColor = [UIColor colorWithRed:186.0f/255.0f green:204.0f/255.0f blue:215.0f/255.0f alpha:1.0f];
+	titleLabel.shadowOffset = CGSizeMake(0.0, 1.0);
+	[titleLabel setText:@"Goals"];
+	titleLabel.textColor = [UIColor colorWithRed:69.0f/255.0f green:74.0f/255.0f blue:77.0f/255.0f alpha:1.0f];
 	titleLabel.backgroundColor = [UIColor clearColor];
-	titleLabel.font = [UIFont fontWithName:@"Baskerville-Italic" size:32];
+    titleLabel.alpha = 0.5;
+	titleLabel.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:22];
 	
 	self.navigationItem.titleView = titleLabel;
+    
+    UIBarButtonItem *addGoal = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addGoal)];
+    self.navigationItem.rightBarButtonItem = addGoal;
+    [addGoal release];
 	
 	[titleLabel release];
+    
+    self.goals = [NSArray array];
+    
+    noGoalsLabel = [[UILabel alloc] initWithFrame:CGRectMake(40.0, 80.0, 252.0, 150.0)];
+
 	
 	//self.title = @"Splendid";
 }
 
-/*
+
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+    
+    
+    
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"Goal"
+                                              inManagedObjectContext:self.managedObjectContext];
+    [fetchRequest setEntity:entity];
+    
+    NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"date"
+                                                                   ascending:YES];
+    NSArray *sortDescriptors = [[NSArray alloc] initWithObjects:sortDescriptor, nil];
+    [fetchRequest setSortDescriptors:sortDescriptors];
+    
+    NSError *error = nil;
+    NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
+    if (fetchedObjects == nil) {
+        // Handle the error
+    }
+    
+    self.goals = fetchedObjects;
+    NSLog(@"transaction: %d", goals.count);
+    
+    [fetchRequest release];
+    [sortDescriptor release];
+    [sortDescriptors release];
+    
+    if (fetchedObjects.count == 0 && firstRun == NO){
+        
+        if ([self.view superview] == noGoalsLabel) {
+            
+            NSLog(@"ss");
+        }
+        //noImageLabel.center = self.view.center;
+        noGoalsLabel.textAlignment = UITextAlignmentLeft;
+        noGoalsLabel.shadowColor = [UIColor whiteColor];
+        noGoalsLabel.shadowOffset = CGSizeMake(0.0, 1.0);
+        noGoalsLabel.numberOfLines = 5;
+        [noGoalsLabel setText:@"Goal helps you to measure and track your financial goal. It will ask you to save your money according to your setting every month."];
+        noGoalsLabel.textColor = [UIColor colorWithRed:69.0f/255.0f green:74.0f/255.0f blue:77.0f/255.0f alpha:0.7f];
+        noGoalsLabel.backgroundColor = [UIColor clearColor];
+        //noImageLabel.alpha = 0.5;
+        noGoalsLabel.font = [UIFont fontWithName:@"HelveticaNeue" size:14];
+       // noGoalsLabel.hidden = YES;
+        [self.view addSubview:noGoalsLabel];
+        [noGoalsLabel release];
+    }
+    else {
+        
+        noGoalsLabel.hidden = YES;
+        
+    }
+    
+    [self.tableView reloadData];
 }
-*/
+
 /*
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
@@ -76,7 +169,9 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     // Return the number of rows in the section.
-    return 10;
+    NSInteger rows = self.goals.count == 0 ? 0 : self.goals.count; 
+    
+    return rows;
 }
 
 
@@ -84,11 +179,61 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     
     static NSString *CellIdentifier = @"Cell";
+     NSManagedObject *object = [goals objectAtIndex:indexPath.row];
     
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     if (cell == nil) {
-        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
+        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier] autorelease];
+        
+        cell.selectionStyle = UITableViewCellSelectionStyleGray;
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        cell.indentationWidth = 20.0;
+        cell.backgroundColor = [UIColor clearColor];
+        cell.textLabel.textColor = [UIColor colorWithRed:101.0f/255.0f green:109.0f/255.0f blue:114.0f/255.0f alpha:1.0];
+        cell.textLabel.shadowColor = [UIColor whiteColor];
+        cell.textLabel.shadowOffset = CGSizeMake(0.0, 1.0);
+        cell.textLabel.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:16.0];
+        cell.textLabel.textAlignment = UITextAlignmentLeft;
+        
+        cell.detailTextLabel.shadowColor = [UIColor whiteColor];
+        cell.detailTextLabel.shadowOffset = CGSizeMake(0.0, 1.0);
+        
+        UILabel *label = [[UILabel alloc] init];
+        label.font = [UIFont fontWithName:@"HelveticaNeue" size:14.0];
+        label.textColor = [UIColor grayColor];
+        label.shadowColor = [UIColor whiteColor];
+        label.textAlignment = UITextAlignmentRight;
+        label.shadowOffset = CGSizeMake(0.0, 1.0);
+        label.frame = CGRectMake(175.0, 7.0, 120.0, 20.0);
+        [label setText:[SplendidUtils currencyIDFormatWithString:  [[object valueForKey:@"price"] description]]];
+        label.backgroundColor = [UIColor clearColor];
+        
+        [cell.contentView addSubview:label];
+        
     }
+    
+   
+    cell.textLabel.text = [object valueForKey:@"what"];
+    monthsNeeded = [[object valueForKey:@"price"] integerValue] / [[object valueForKey:@"asideAmount"] integerValue];
+    //cell.detailTextLabel.text = [SplendidUtils currencyIDFormatWithString:  [[object valueForKey:@"price"] description]];
+    NSString *asideAmount = [SplendidUtils currencyIDFormatWithString:[object valueForKey:@"asideAmount"]];
+    cell.detailTextLabel.text = [NSString stringWithFormat:@"%@ for %d Months", asideAmount, abs(monthsNeeded)];
+    
+    
+  
+    
+    // Configure the cell...
+    UIImage *backgroundCell = [[UIImage imageNamed:@"cell_bg_5.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(1.0, 1.0, 1.0, 1.0)];
+    // UIImage *lbackgroundCell = [[UIImage imageNamed:@"cell_bg_5.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(1.0, 1.0, 1.0, 1.0)];
+    
+    //cell.contentView.backgroundColor = [UIColor clearColor];
+    
+    cell.backgroundColor = [UIColor clearColor];
+    cell.backgroundView = [[[UIImageView alloc] initWithImage:backgroundCell] autorelease];
+    cell.backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    cell.backgroundColor = [UIColor clearColor];
+    cell.frame = cell.bounds;
+
     
     // Configure the cell...
     
@@ -140,14 +285,35 @@
 #pragma mark Table view delegate
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    // Navigation logic may go here. Create and push another view controller.
-    /*
-    <#DetailViewController#> *detailViewController = [[<#DetailViewController#> alloc] initWithNibName:@"<#Nib name#>" bundle:nil];
-    // ...
-    // Pass the selected object to the new view controller.
-    [self.navigationController pushViewController:detailViewController animated:YES];
-    [detailViewController release];
-    */
+ 
+    Goal *goal = [goals objectAtIndex:indexPath.row];
+    
+    GoalDetailTableViewController *goalDetailView = [[GoalDetailTableViewController alloc] initWithStyle:UITableViewStyleGrouped];
+    goalDetailView.goal = goal;
+    goalDetailView.monthsLeft = monthsNeeded;
+    [self.navigationController pushViewController:goalDetailView animated:YES];
+    [goalDetailView release];
+   // [self.tableView deselectRowAtIndexPath:indexPath animated:NO];
+}
+
+#pragma mark -
+#pragma mark ViewTransition
+
+- (void) addGoal {
+    
+    Goal *goal = [NSEntityDescription insertNewObjectForEntityForName:@"Goal" inManagedObjectContext:self.managedObjectContext];
+    Income *income = [NSEntityDescription insertNewObjectForEntityForName:@"Income" inManagedObjectContext:self.managedObjectContext];
+    
+    AddGoalViewController *viewController = [[AddGoalViewController alloc] initWithStyle:UITableViewStyleGrouped];
+    //viewController.managedObjectContext = self.managedObjectContext;
+    viewController.goal = goal;
+    viewController.income = income;
+  
+    UINavigationController *aNavController = [[UINavigationController alloc] initWithRootViewController:viewController];
+    
+    [self.navigationController presentModalViewController:aNavController animated:YES];
+    [viewController release];
+    [aNavController release];
 }
 
 

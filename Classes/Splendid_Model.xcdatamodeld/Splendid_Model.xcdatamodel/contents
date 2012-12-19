@@ -3,8 +3,64 @@
     <entity name="Expense" representedClassName="Expense" syncable="YES">
         <attribute name="date" optional="YES" attributeType="Date" syncable="YES"/>
         <attribute name="expenseAmount" optional="YES" attributeType="Decimal" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="notes" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="category" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="ExpenseCategory" inverseName="expenses" inverseEntity="ExpenseCategory" syncable="YES"/>
+        <relationship name="image" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Image" inverseName="expense" inverseEntity="Image" syncable="YES"/>
+        <relationship name="location" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Location" inverseName="expenses" inverseEntity="Location" syncable="YES"/>
+        <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="expenses" inverseEntity="User" syncable="YES"/>
+    </entity>
+    <entity name="ExpenseCategory" syncable="YES">
+        <attribute name="date" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="expenses" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Expense" inverseName="category" inverseEntity="Expense" syncable="YES"/>
+    </entity>
+    <entity name="Goal" representedClassName="Goal" syncable="YES">
+        <attribute name="asideAmount" optional="YES" attributeType="Decimal" defaultValueString="0" syncable="YES"/>
+        <attribute name="date" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="price" optional="YES" attributeType="Decimal" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="what" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="user" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="goals" inverseEntity="User" syncable="YES"/>
+    </entity>
+    <entity name="Image" syncable="YES">
+        <attribute name="imagePath" optional="YES" attributeType="String" valueTransformerName="ImageToDataTransformer" syncable="YES"/>
+        <relationship name="expense" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Expense" inverseName="image" inverseEntity="Expense" syncable="YES"/>
+    </entity>
+    <entity name="Income" representedClassName="Income" syncable="YES">
+        <attribute name="date" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="incomeAmount" optional="YES" attributeType="Decimal" defaultValueString="0.0" syncable="YES"/>
+        <relationship name="category" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="IncomeCategory" inverseName="incomes" inverseEntity="IncomeCategory" syncable="YES"/>
+        <relationship name="user" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="incomes" inverseEntity="User" syncable="YES"/>
+    </entity>
+    <entity name="IncomeCategory" syncable="YES">
+        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="incomes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Income" inverseName="category" inverseEntity="Income" syncable="YES"/>
+    </entity>
+    <entity name="Location" syncable="YES">
+        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="expenses" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Expense" inverseName="location" inverseEntity="Expense" syncable="YES"/>
+    </entity>
+    <entity name="Recurring" representedClassName="Recurring" syncable="YES">
+        <attribute name="date" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="day" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="notes" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="recurringAmount" optional="YES" attributeType="Decimal" defaultValueString="0.0" syncable="YES"/>
+        <relationship name="user" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="recurrings" inverseEntity="User" syncable="YES"/>
+    </entity>
+    <entity name="User" syncable="YES">
+        <relationship name="expenses" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Expense" inverseName="user" inverseEntity="Expense" syncable="YES"/>
+        <relationship name="goals" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Goal" inverseName="user" inverseEntity="Goal" syncable="YES"/>
+        <relationship name="incomes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Income" inverseName="user" inverseEntity="Income" syncable="YES"/>
+        <relationship name="recurrings" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Recurring" inverseName="user" inverseEntity="Recurring" syncable="YES"/>
     </entity>
     <elements>
-        <element name="Expense" positionX="-63" positionY="-18" width="128" height="75"/>
+        <element name="Expense" positionX="-153" positionY="-585" width="128" height="135"/>
+        <element name="ExpenseCategory" positionX="268" positionY="-489" width="128" height="90"/>
+        <element name="Goal" positionX="18" positionY="-156" width="128" height="120"/>
+        <element name="Image" positionX="133" positionY="-594" width="128" height="75"/>
+        <element name="Income" positionX="-380" positionY="-468" width="128" height="75"/>
+        <element name="IncomeCategory" positionX="-378" positionY="-585" width="128" height="75"/>
+        <element name="Location" positionX="223" positionY="-318" width="128" height="75"/>
+        <element name="Recurring" positionX="-234" positionY="-54" width="128" height="105"/>
+        <element name="User" positionX="-200" positionY="-387" width="128" height="90"/>
     </elements>
 </model>

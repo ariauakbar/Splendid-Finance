@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 #import <CoreData/CoreData.h>
 
+
 //@class DashboardViewController;
 
 @class SplendidViewController;
@@ -17,7 +18,7 @@
     UIWindow *window;
     SplendidViewController *viewController;
     UITabBarController *tabBarController;
-    
+    BOOL executed;
     @private
     
     NSManagedObjectModel *managedObjectModel_;
@@ -28,6 +29,7 @@
 
 @property (nonatomic, retain) IBOutlet UIWindow *window;
 @property (nonatomic, retain) IBOutlet SplendidViewController *viewController;
+@property (nonatomic, setter = executed:) BOOL executed;
 @property (nonatomic, retain) UITabBarController *tabBarController;
 @property (nonatomic, retain, readonly) NSManagedObjectModel *managedObjectModel;
 @property (nonatomic, retain, readonly) NSManagedObjectContext *managedObjectContext;
@@ -35,6 +37,7 @@
 
 - (NSURL *)applicationDocumentsDirectory;
 - (void)saveContext;
+- (void)addCategoryToDataStore;
 
 @end
 

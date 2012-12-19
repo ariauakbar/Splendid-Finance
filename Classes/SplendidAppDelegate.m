@@ -13,13 +13,16 @@
 #import "TransactionViewController.h"
 #import "RecurringViewController.h"
 #import "GoalViewController.h"
+#import "GCPINViewController.h"
 
-
+#define isCategoryInserted @"categoryInserted"
+#define kPassCodeKey @"passCodeKey"
 
 @implementation SplendidAppDelegate
 
 @synthesize window;
 @synthesize viewController;
+@synthesize executed;
 @synthesize tabBarController;
 
 #pragma mark -
@@ -52,8 +55,10 @@
 
    // DashboardViewController *dashboard = [[[DashboardViewController alloc] init] autorelease];
     //dashboard.managedObjectContext = self.managedObjectContext;
+   
     
     tabBarController = [[UITabBarController alloc] init];
+  //  tabBarController.tabBar.frame = CGRectMake(self.tabBarController.tabBar.frame.origin.x, self.tabBarController.tabBar.frame.origin.y + 10, self.tabBarController.tabBar.frame.size.width , self.tabBarController.tabBar.frame.size.height);
     //[tabBarController.tabBar setTintColor:[UIColor colorWithRed:168.0f/255.0f green:182.0f/255.0f blue:191.0f/255.0f alpha:1.0f]];
     //[tabBarController.tabBar setSelectedImageTintColor:[UIColor whiteColor]];
     
@@ -61,31 +66,45 @@
    // DashboardViewController *dashboard = [[DashboardViewController alloc] init]; 
     
     //[[UINavigationBar appearance] setBackgroundImage:[UIImage imageNamed:@"navbar-.png"] forBarMetrics:UIBarMetricsDefault];
+                                               
     [[UINavigationBar appearance] setTintColor:[UIColor colorWithRed:168.0f/255.0f green:182.0f/255.0f blue:191.0f/255.0f alpha:1.0f]];
+    
     DashboardViewController *vc1 = [[DashboardViewController alloc] init];
     //rootViewController.managedObjectContext = self.managedObjectContext;
      
     vc1.managedObjectContext = self.managedObjectContext;
     UINavigationController *nv1 = [[UINavigationController alloc] initWithRootViewController:vc1];
-    nv1.tabBarItem.image = [UIImage imageNamed:@"home1.png"];
+    nv1.tabBarItem.image = [UIImage imageNamed:@"dash.png"];
+
+    
     [vc1 release];
     
-    UIViewController *vc2 = [[RecordsViewController alloc] init];
+   RecordsViewController *vc2 = [[RecordsViewController alloc] init];
+    vc2.managedObjectContext = self.managedObjectContext;
     UINavigationController *nv2 = [[UINavigationController alloc] initWithRootViewController:vc2];
+    vc2.title = @"Records";
+    nv2.tabBarItem.image = [UIImage imageNamed:@"cal_rec.png"];
     [vc2 release];
     
     TransactionViewController *vc3 = [[TransactionViewController alloc] init];
     UINavigationController *nv3 = [[UINavigationController alloc] initWithRootViewController:vc3];
     vc3.managedObjectContext = self.managedObjectContext;
     vc3.title = @"Transactions";
+    nv3.tabBarItem.image = [UIImage imageNamed:@"trans_glyph2.png"];
     [vc3 release];
     
-    UIViewController *vc4 = [[RecurringViewController alloc] init];
+    RecurringViewController *vc4 = [[RecurringViewController alloc] init];
     UINavigationController *nv4 = [[UINavigationController alloc] initWithRootViewController:vc4];
+    vc4.title = @"Recurring";
+    vc4.managedObjectContext = self.managedObjectContext;
+    nv4.tabBarItem.image = [UIImage imageNamed:@"recurr_2.png"];
     [vc4 release];
     
-    UIViewController *vc5 = [[GoalViewController alloc] init];
+    GoalViewController *vc5 = [[GoalViewController alloc] init];
+    vc5.managedObjectContext = self.managedObjectContext;
     UINavigationController *nv5 = [[UINavigationController alloc] initWithRootViewController:vc5];
+    vc5.title = @"Goals";
+    nv5.tabBarItem.image = [UIImage imageNamed:@"goal_glyph3.png"];
     [vc5 release];
     
     NSMutableArray *views = [[NSMutableArray alloc] initWithCapacity:5];
@@ -95,7 +114,9 @@
     [views addObject:nv4];
     [views addObject:nv5];
     
-    
+#if DEBUG
+    NSLog(@"TEST");
+#endif
 
     tabBarController.viewControllers = views;
     
@@ -117,6 +138,32 @@
 	
 	//DashboardViewController *dashboardViewController = [[DashboardViewController alloc] init];
 	//dashboardViewController.managedObjectContext = self.managedObjectContext;
+    
+    // check whether category already been stored or not. if not, store immidiately
+   
+    if (![[NSUserDefaults standardUserDefaults] valueForKey:isCategoryInserted]) {
+        
+        //[self addCategoryToDataStore];
+        //NSLog(@" store executed");
+    }
+    
+    //[self addCategoryToDataStore];
+    
+    /*
+    NSFetchRequest *fetch = [[NSFetchRequest alloc] init];
+    [fetch setEntity:[NSEntityDescription entityForName:@"ExpenseCategory" inManagedObjectContext:self.managedObjectContext]];
+    NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"name" ascending:YES];
+    NSArray *sortDescriptors = [[NSArray alloc] initWithObjects:&sortDescriptor count:1];
+    [fetch setSortDescriptors:sortDescriptors];
+    
+    NSError *error = nil;
+    NSArray *categories = [self.managedObjectContext executeFetchRequest:fetch error:&error];
+    
+    for (NSManagedObject *object in categories) {
+        
+        NSLog(@" -- category: %@", [[object valueForKey:@"name"] description]);
+    }
+     */
     
     return YES;
 }
@@ -142,6 +189,28 @@
     /*
      Called as part of  transition from the background to the inactive state: here you can undo many of the changes made on entering the background.
      */
+    //NSLog(@"EnterForeground");
+    
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    NSString *passcode = [userDefaults valueForKey:kPassCodeKey];
+    
+    if(passcode != nil)
+    {
+        NSLog(@"become Active");
+        GCPINViewController *PIN = [[GCPINViewController alloc]
+                                    initWithNibName:nil
+                                    bundle:nil
+                                    mode:GCPINViewControllerModeVerify];
+        PIN.messageText = @"Enter your passcode";
+        PIN.errorText = @"Incorrect passcode";
+        PIN.title = @"Enter Passcode";
+        PIN.verifyBlock = ^(NSString *code) {
+            NSLog(@"checking code: %@", code);
+            return [code isEqualToString:passcode];
+        };
+        [PIN presentFromViewController:self.tabBarController animated:NO];
+        [PIN release];
+	}
 }
 
 
@@ -149,6 +218,10 @@
     /*
      Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
      */
+    
+
+    
+ 
 }
 
 
@@ -238,6 +311,11 @@
     
     NSURL *storeURL = [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"Splendid_Model.sqlite"];
     
+    BOOL firstRun = NO;	
+    if (![[NSFileManager defaultManager] fileExistsAtPath:[storeURL path] isDirectory:NULL]) {
+		firstRun = YES;		
+	}
+    
     NSError *error = nil;
     persistentStoreCoordinator_ = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:[self managedObjectModel]];
     if (![persistentStoreCoordinator_ addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error]) {
@@ -268,6 +346,12 @@
         abort();
     }    
     
+    if (firstRun) {
+
+        [self addCategoryToDataStore];
+        NSLog(@" store executed");
+    
+    }
     return persistentStoreCoordinator_;
 }
 
@@ -282,6 +366,59 @@
     return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
 }
 
+- (void)addCategoryToDataStore {
+    
+    // Category. Will be stored to DataStore just once.
+    
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"ExpenseCategory" inManagedObjectContext:self.managedObjectContext];
+    NSManagedObject *food = [NSEntityDescription insertNewObjectForEntityForName:[entity name] inManagedObjectContext:self.managedObjectContext];
+    [food setValue:@"Food" forKey:@"name"];
+    [food setValue:[NSDate date] forKey:@"date"];
+    NSManagedObject *clothacc = [NSEntityDescription insertNewObjectForEntityForName:[entity name] inManagedObjectContext:self.managedObjectContext];
+    [clothacc setValue:@"Clothing & Accessories" forKey:@"name"];
+    [clothacc setValue:[NSDate date] forKey:@"date"];
+    NSManagedObject *trans = [NSEntityDescription insertNewObjectForEntityForName:[entity name] inManagedObjectContext:self.managedObjectContext];
+    [trans setValue:@"Transportation" forKey:@"name"];
+    [trans setValue:[NSDate date] forKey:@"date"];
+    NSManagedObject *recreat = [NSEntityDescription insertNewObjectForEntityForName:[entity name] inManagedObjectContext:self.managedObjectContext];
+    [recreat setValue:@"Recreation" forKey:@"name"];
+    [recreat setValue:[NSDate date] forKey:@"date"];
+    NSManagedObject *heamedic = [NSEntityDescription insertNewObjectForEntityForName:[entity name] inManagedObjectContext:self.managedObjectContext];
+    [heamedic setValue:@"Health & Medical" forKey:@"name"];
+    [heamedic setValue:[NSDate date] forKey:@"date"];
+    NSManagedObject *house = [NSEntityDescription insertNewObjectForEntityForName:[entity name] inManagedObjectContext:self.managedObjectContext];
+    [house setValue:@"Housing & Household" forKey:@"name"];
+    [house setValue:[NSDate date] forKey:@"date"];
+    NSManagedObject *taxes = [NSEntityDescription insertNewObjectForEntityForName:[entity name] inManagedObjectContext:self.managedObjectContext];
+    [taxes setValue:@"Taxes" forKey:@"name"];
+    [taxes setValue:[NSDate date] forKey:@"date"];
+    NSManagedObject *others = [NSEntityDescription insertNewObjectForEntityForName:[entity name] inManagedObjectContext:self.managedObjectContext];
+    [others setValue:@"Others" forKey:@"name"];
+    [others setValue:[NSDate date] forKey:@"date"];
+    
+    NSEntityDescription *incomeEntity = [NSEntityDescription entityForName:@"IncomeCategory" inManagedObjectContext:self.managedObjectContext];
+    NSManagedObject *salary = [NSEntityDescription insertNewObjectForEntityForName:[incomeEntity name] inManagedObjectContext:self.managedObjectContext];
+    [salary setValue:@"Salary" forKey:@"name"];
+    NSManagedObject *bonus = [NSEntityDescription insertNewObjectForEntityForName:[incomeEntity name] inManagedObjectContext:self.managedObjectContext];
+    [bonus setValue:@"Bonus" forKey:@"name"];
+    
+    
+    
+    NSError *error = nil;
+    
+    if (![self.managedObjectContext save:&error]) {
+        /*
+         Replace this implementation with code to handle the error appropriately.
+         
+         abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development. If it is not possible to recover from the error, display an alert panel that instructs the user to quit the application by pressing the Home button.
+         */
+        NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
+        abort();
+    }
+    
+    // set that Category list is already stored. 
+    [[NSUserDefaults standardUserDefaults] setBool:YES forKey:isCategoryInserted];
+}
 
 
 - (void)dealloc {

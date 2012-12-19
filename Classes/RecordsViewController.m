@@ -7,12 +7,14 @@
 //
 
 #import "RecordsViewController.h"
+#import "RecordsDetailViewController.h"
 
 
 
 @implementation RecordsViewController
 
 @synthesize  months;
+@synthesize managedObjectContext;
 
 #pragma mark -
 #pragma mark View lifecycle
@@ -48,10 +50,16 @@
 	
 	[titleLabel release];
     
-    self.months = [NSArray arrayWithObjects:@"August 2011", @"July 2011", @"June 2011", @"September 2010", @"October 2010", @"November 2010", @"October 2010", @"August 2010", @"July 2010", @"June 2010", nil];
+   // self.months = [NSArray arrayWithObjects:@"August 2011", @"July 2011", @"June 2011", @"September 2010", @"October 2010", @"November 2010", @"October 2010", @"August 2010", @"July 2010", @"June 2010", nil];
     
 	
 	//self.title = @"Splendid";
+    
+    /*
+    UITabBar *tabBar = self.tabBarController.tabBar;
+    UITabBarItem *item0 = [tabBar.items objectAtIndex:1];
+    [item0 setFinishedSelectedImage:[UIImage imageNamed:@"tabBar-popular.png"] withFinishedUnselectedImage:[UIImage imageNamed:@"tabBar-popular.png"]];
+     */
     
     UIView *headerView = [[UIView alloc] init];
     headerView.frame = CGRectMake(0.0f, -70.0, self.tableView.frame.size.width, 50.0f);
@@ -117,7 +125,7 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     // Return the number of rows in the section.
-    return self.months.count;
+    return 1;
 }
 
 
@@ -133,7 +141,9 @@
         cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
         cell.backgroundColor = [UIColor clearColor];
         // Configure the cell...
-        cell.textLabel.text = [self.months objectAtIndex:indexPath.row];
+       //cell.textLabel.text = [self.months objectAtIndex:indexPath.row];
+        cell.textLabel.text = @"February 2012";
+
         cell.textLabel.textColor = [UIColor colorWithRed:101.0f/255.0f green:109.0f/255.0f blue:114.0f/255.0f alpha:1.0];
         cell.textLabel.shadowColor = [UIColor whiteColor];
         cell.textLabel.shadowOffset = CGSizeMake(0.0, 1.0);
@@ -147,7 +157,7 @@
     //cell.contentView.backgroundColor = [UIColor clearColor];
     
         cell.backgroundColor = [UIColor clearColor];
-        cell.backgroundView = [[UIImageView alloc] initWithImage:backgroundCell];
+        cell.backgroundView = [[[UIImageView alloc] initWithImage:backgroundCell] autorelease];
         cell.backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         cell.backgroundColor = [UIColor clearColor];
         cell.frame = cell.bounds;
@@ -214,6 +224,10 @@
     [self.navigationController pushViewController:detailViewController animated:YES];
     [detailViewController release];
     */
+
+    RecordsDetailViewController *recordDetails = [[RecordsDetailViewController alloc] init];
+    recordDetails.managedObjectContext = self.managedObjectContext;
+    [self.navigationController pushViewController:recordDetails animated:YES];
 }
 
 

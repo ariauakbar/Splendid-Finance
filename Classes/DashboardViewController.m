@@ -12,6 +12,10 @@
 #import "AddNewExpenseViewController.h"
 #import "SplendidAppDelegate.h"
 #import "Expense.h"
+#import "SplendidUtils.h"
+#import "GCPINViewController.h"
+
+#define kPassCodeKey @"passCodeKey"
 
 @implementation UINavigationBar (CustomImage)
 
@@ -31,15 +35,22 @@
 - (void)addExpense;
 - (void)addNewExpense;
 - (void)updateTodayLabel;
-@end
+- (void)updateIncomeLabel;
+- (void)updateWeekLabel;
+- (NSDictionary *) getDatebyRange:(DateRangeType) dateRangeType;
+- (void) performUpdateActionWithSelector:(SEL)selector withDelay:(NSTimeInterval) delay;
+
+@end                                                                                                                                                                                                                                                                                                                                                                                                                                             
 
 
 @implementation DashboardViewController
 
-
 @synthesize todayExpenseLabel;
 @synthesize managedObjectContext;
 @synthesize fetchedResultsController;
+@synthesize balanceLabel;
+@synthesize globalExpense;
+@synthesize weekLabel;
 
 #pragma mark -
 #pragma mark Memory Management
@@ -67,10 +78,40 @@
 // Implement viewDidLoad to do additional setup after loading the view, typically from a nib.
 - (void)viewDidLoad {
     [super viewDidLoad];
-	
     
-    self.title = @"Dashboard";
-    self.tabBarItem.image = [UIImage imageNamed:@"home1.png"];
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    NSString *passcode = [userDefaults valueForKey:kPassCodeKey];
+    
+    if(passcode != nil)
+    {
+        GCPINViewController *PIN = [[GCPINViewController alloc]
+                                initWithNibName:nil
+                                bundle:nil
+                                mode:GCPINViewControllerModeVerify];
+        PIN.messageText = @"Enter your passcode";
+        PIN.errorText = @"Incorrect passcode";
+        PIN.title = @"Enter Passcode";
+        PIN.verifyBlock = ^(NSString *code) {
+            NSLog(@"checking code: %@", code);
+            return [code isEqualToString:passcode];
+        };
+        [PIN presentFromViewController:self animated:NO];
+        [PIN release];
+        
+       
+  
+        
+ 
+	}
+    
+    /*
+     UITabBar *tabBar = self.tabBarController.tabBar;
+          UITabBarItem *item0 = [tabBar.items objectAtIndex:0];
+    [item0 setFinishedSelectedImage:[UIImage imageNamed:@"tabBar-home.png"] withFinishedUnselectedImage:[UIImage imageNamed:@"tabBar-home.png"]];
+     */
+    
+    //self.title = @"Dashboard";
+    //self.tabBarItem.image = [UIImage imageNamed:@"cal_glyph.png"];
     [self.tabBarItem setTitleTextAttributes:[NSDictionary dictionaryWithObject:[UIColor blackColor] forKey:UITextAttributeTextShadowColor] forState:UIControlStateSelected];
 	//self.view.backgroundColor = [UIColor whiteColor];
 	// ****** Title Label View ******
@@ -93,7 +134,7 @@
 	self.navigationItem.rightBarButtonItem = settingBarButtonItem;
 	[settingBarButtonItem release];
     
-    UIBarButtonItem *incomeBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Income" style:UIBarButtonItemStylePlain target:self action:@selector(showIncomeViewController)];
+    UIBarButtonItem *incomeBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"+Income" style:UIBarButtonItemStylePlain target:self action:@selector(showIncomeViewController)];
 	self.navigationItem.leftBarButtonItem = incomeBarButtonItem;
 	[incomeBarButtonItem release];
 	
@@ -130,11 +171,13 @@
      */
     
     /* ==== Current Balance === */
+    
+    
     UILabel *currentLabelText = [[UILabel alloc] init];
     currentLabelText.frame = CGRectMake(40.0, 18.0, 170.0, 20.0);
     currentLabelText.text = @"Balance";
     currentLabelText.backgroundColor = [UIColor clearColor];
-    currentLabelText.textColor = [UIColor colorWithRed:101.0f/255.0f green:109.0f/255.0f blue:114.0f/255.0f alpha:1.0];
+    currentLabelText.textColor = [UIColor colorWithRed:138.0f/255.0f green:150.0f/255.0f blue:157.0f/255.0f alpha:1.0];
     currentLabelText.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:20];
     currentLabelText.shadowColor = [UIColor whiteColor];
     currentLabelText.shadowOffset = CGSizeMake(0.0, 1.0);
@@ -146,7 +189,7 @@
     todayLabelText.frame = CGRectMake(40.0, 58.0, 70.0, 20.0);
     todayLabelText.text = @"Today";
     todayLabelText.backgroundColor = [UIColor clearColor];
-    todayLabelText.textColor = [UIColor colorWithRed:101.0f/255.0f green:109.0f/255.0f blue:114.0f/255.0f alpha:1.0];
+    todayLabelText.textColor = [UIColor colorWithRed:138.0f/255.0f green:150.0f/255.0f blue:157.0f/255.0f alpha:1.0];
     todayLabelText.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:20];
     todayLabelText.shadowColor = [UIColor whiteColor];
     todayLabelText.shadowOffset = CGSizeMake(0.0, 1.0);
@@ -158,7 +201,7 @@
     weekLabelText.frame = CGRectMake(40.0, 99.0, 110.0, 20.0);
     weekLabelText.text = @"This Week";
     weekLabelText.backgroundColor = [UIColor clearColor];
-    weekLabelText.textColor = [UIColor colorWithRed:101.0f/255.0f green:109.0f/255.0f blue:114.0f/255.0f alpha:1.0];
+    weekLabelText.textColor = [UIColor colorWithRed:138.0f/255.0f green:150.0f/255.0f blue:157.0f/255.0f alpha:1.0];
     //weekLabelText.textColor = [UIColor colorWithRed:138.0f/255.0f green:150.0f/255.0f blue:157.0f/255.0f alpha:1.0];
     weekLabelText.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:20];
     weekLabelText.shadowColor = [UIColor whiteColor];
@@ -166,32 +209,8 @@
     
     [self.view addSubview:weekLabelText];
     [weekLabelText release];
-    
-    CGRect balanceFrame = CGRectMake(160.0, 3.0, 150.0, 50.0);
-	UILabel *balanceLabel  = [[UILabel alloc] init];
-	balanceLabel.frame = balanceFrame;
-	balanceLabel.backgroundColor = [UIColor clearColor];
-    balanceLabel.textColor = [UIColor colorWithRed:100.0f/255.0f green:101.0f/255.0f blue:101.0f/255.0f alpha:1.0];
-	balanceLabel.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:20.0];
-    balanceLabel.shadowColor = [UIColor whiteColor];
-    balanceLabel.shadowOffset = CGSizeMake(0.0, 1.0);
-    balanceLabel.text = @"Rp. 3.000.000";
-    
-    [self.view addSubview:balanceLabel];
-    [balanceLabel release];
-    
-    CGRect weekFrame = CGRectMake(160.0, 84.0, 150.0, 50.0);
-	UILabel *weekLabel  = [[UILabel alloc] init];
-	weekLabel.frame = weekFrame;
-	weekLabel.backgroundColor = [UIColor clearColor];
-    weekLabel.textColor = [UIColor colorWithRed:100.0f/255.0f green:101.0f/255.0f blue:101.0f/255.0f alpha:1.0];
-	weekLabel.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:20.0];
-    weekLabel.shadowOffset = CGSizeMake(0.0, 1.0);
-    weekLabel.shadowColor = [UIColor whiteColor];
-    weekLabel.text = @"Rp. 150.000";
-    
-    [self.view addSubview:weekLabel];
-    [weekLabel release];
+   
+
 	
 	
 	// ****** Expense Button ***** 
@@ -200,15 +219,18 @@
 	UIButton *expenseButton = [UIButton buttonWithType:UIButtonTypeCustom];
 	expenseButton.frame = CGRectMake(CGRectGetMinX(self.view.frame) + 25.0, 250.0, 273.0, 43.0);
 	[expenseButton setTitle:@"+ Add Expense" forState:UIControlStateNormal];
-    expenseButton.titleLabel.font = [UIFont fontWithName:@"HelveticaNeue" size:14];
+    expenseButton.titleLabel.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:14];
     // expenseButton.backgroundColor = [UIColor clearColor];
-    [expenseButton setTitleColor:[UIColor grayColor] forState:UIControlStateNormal ];
-    [expenseButton setTitleColor:[UIColor whiteColor] forState:UIControlStateHighlighted];
+    [expenseButton setTitleColor:[UIColor colorWithRed:100.0f/255.0f green:101.0f/255.0f blue:101.0f/255.0f alpha:1.0] forState:UIControlStateNormal ];
+    [expenseButton setTitleShadowColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [expenseButton setTitleColor:[UIColor colorWithRed:100.0f/255.0f green:101.0f/255.0f blue:101.0f/255.0f alpha:1.0] forState:UIControlStateHighlighted];
+    [expenseButton setTitleShadowColor:[UIColor whiteColor] forState:UIControlStateHighlighted];
     expenseButton.titleLabel.shadowOffset = CGSizeMake(0.0, 1.0);
     expenseButton.titleLabel.shadowColor = [UIColor whiteColor];
-	//[self.view addSubview:expenseButton];
+    expenseButton.titleLabel.textColor = [UIColor darkGrayColor];
+	//[self.view addSubview:expenseButton]; 
     UIImage *expenseImage = [UIImage imageNamed:@"add_expense_button_8.png"];
-    UIImage *expenseImagePressed = [UIImage imageNamed:@"add_expense_button_highlighted_5.png"];
+    UIImage *expenseImagePressed = [UIImage imageNamed:@"add_expense_button_pressed_8.png"];
     //UIImage *strechableButtonImageExpense = [expenseImage resizableImageWithCapInsets:UIEdgeInsetsMake(0.0, 10.0, 0.0, 35.0)];
     //UIImage *strechableButtonImageExpensePressed = [expenseImagePressed resizableImageWithCapInsets:UIEdgeInsetsMake(20.0, 10.0, 20.0, 10.0)];
     //expenseButton.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -219,8 +241,12 @@
     [self.view addSubview:expenseButton];
 	
 	UILabel *expenseLabel = self.todayExpenseLabel;
-	
-	 [self.view addSubview:expenseLabel];
+	UILabel *aBalanceLabel = self.balanceLabel;
+    UILabel *aWeekLabel = self.weekLabel;
+    
+    [self.view addSubview:aWeekLabel];
+    [self.view addSubview:aBalanceLabel];
+    [self.view addSubview:expenseLabel];
     
     /*
     UIImage *dashboardLine = [UIImage imageNamed:@"dashboard_line.png"];
@@ -239,8 +265,27 @@
     // ==============================
     
     [self updateTodayLabel];
+    [self updateIncomeLabel];
+    [self updateWeekLabel];
 }
 
+
+- (void) viewWillAppear:(BOOL)animated {
+    
+    [super viewWillAppear:YES];
+    
+    [self performUpdateActionWithSelector:@selector(updateTodayLabel) withDelay:1.0];
+    //[self updateTodayLabel];
+    //[self updateIncomeLabel];
+    //[self updateWeekLabel];
+}
+
+- (void) viewDidAppear:(BOOL)animated {
+    
+    [super viewDidAppear:animated];
+    
+   // self.navigationItem.prompt = nil;
+}
 
 /*
  // Override to allow orientations other than the default portrait orientation.
@@ -254,9 +299,9 @@
 
 - (void)showSettingViewController {
 	
-	SettingViewController *viewController = [[SettingViewController alloc] init];
+	SettingViewController *viewController = [[SettingViewController alloc] initWithStyle:UITableViewStyleGrouped];
+    viewController.managedObjectContext = self.managedObjectContext;
 	UINavigationController *aNavigationController = [[UINavigationController alloc] initWithRootViewController:viewController];
-	aNavigationController.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
 	[self.navigationController presentModalViewController:aNavigationController animated:YES];
 	
 	[aNavigationController release];
@@ -266,9 +311,12 @@
 
 - (void)showIncomeViewController {
 	
+    Income *income = [NSEntityDescription insertNewObjectForEntityForName:@"Income" inManagedObjectContext:self.managedObjectContext];
+    
 	IncomeViewController *viewController = [[IncomeViewController alloc] init];
+    viewController.income = income;
+    viewController.delegate = self;
 	UINavigationController *aNavigationController = [[UINavigationController alloc] initWithRootViewController:viewController];
-	aNavigationController.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
 	[self.navigationController presentModalViewController:aNavigationController animated:YES];
 	
 	[aNavigationController release];
@@ -280,74 +328,145 @@
 #pragma CoreData Connection
 
 // It's actually just a test to retrive data from persistent store. ^_^
+// Core data fetch abstraction. DRY = Don't repeat yourself.
+- (NSString *) stringForFetchedEntity:(NSString *)entity expressionFunction:(NSString *)expFunc keyPath:(NSString *)keyPath expressionName:(NSString *)expName resultDatatype:(ResultDataType)dataType
+{
+    //NSLog(@"one");
+    NSPredicate *predicate = nil;
+    NSString *resultString = nil;
+    NSError *error = nil;
+    NSDictionary *dateFilter = nil;
+    NSEntityDescription *entityDesc = [NSEntityDescription entityForName:entity inManagedObjectContext:self.managedObjectContext];
+    NSFetchRequest *fecthRequest = [[[NSFetchRequest alloc] init] autorelease];
+    [fecthRequest setEntity:entityDesc];
+    // [fecth setBatchSizeL:1]
+    //NSLog(@"two");
+    NSExpression *expression = [NSExpression expressionForFunction:expFunc arguments:[NSArray arrayWithObject:[NSExpression expressionForKeyPath:keyPath]]];
+    
+    if (dataType == ResultDataTypeTodayExpense)
+    {
+        
+        dateFilter = [self getDatebyRange:DateRangeTypeToday];
+        predicate = [NSPredicate predicateWithFormat:@"date >= %@ && date < %@", [dateFilter objectForKey:@"fromDate"], [dateFilter objectForKey:@"toDate"]];
+        NSLog(@"two-b");
+    }
+    else if (dataType == ResultDataTypeWeekExpense)
+    {
+        //dateFilter = [self getDatebyRange:DateRangeTypeOneWeek];
+        
+        dateFilter = [self getDatebyRange:DateRangeTypeOneWeek];
+        predicate = [NSPredicate predicateWithFormat:@"date > %@", [dateFilter objectForKey:@"beginningOfWeek"]];
+        
+    }
+    //NSLog(@"three");
+    NSExpressionDescription *expressionDescription = [[[NSExpressionDescription alloc] init] autorelease];
+    [expressionDescription setName:expName];
+    [expressionDescription setExpression:expression];
+    [expressionDescription setExpressionResultType:NSDecimalAttributeType];
+    
+    //NSLog(@"four");
+    NSArray *properties = [NSArray arrayWithObject:expressionDescription];
+    if (predicate){
+        [fecthRequest setPredicate:predicate];
+        NSLog(@"predicate");
+    }
+    [fecthRequest setPropertiesToFetch:properties];
+    [fecthRequest setResultType:NSDictionaryResultType];
+    NSArray *fetchedResult = [self.managedObjectContext executeFetchRequest:fecthRequest error:&error];
+    
+    //NSLog(@"fetchedResult: %@", fetchedResult);
+    
+    if (fetchedResult) {
+        
+        resultString = [[fetchedResult objectAtIndex:0] objectForKey:expName];
+    }
+    
+    //NSLog(@"five");
+    
+    return [NSString stringWithFormat:@"%@", resultString];
+}
+
+- (NSDictionary *) getDatebyRange:(DateRangeType) dateRangeType {
+    
+    NSCalendar *cal = [NSCalendar currentCalendar];
+    NSDate *now = [NSDate date];
+    NSDateComponents *dateComponents;
+    NSDictionary *dateDict = nil;
+    
+    
+    if (dateRangeType == DateRangeTypeToday) {
+        
+        // compare range of day. today and tomorrow. ex: 12 jan 2012 at 00:00 to 13 jan 2012 at 23.59
+        
+        dateComponents = [cal components:NSDayCalendarUnit | NSMonthCalendarUnit | NSYearCalendarUnit fromDate:now];
+        NSDateComponents *tommorow = [[NSDateComponents alloc] init];
+        tommorow.day = 1;
+        
+        NSDate *fromDate = [cal dateFromComponents:dateComponents];
+        NSDate *toDate = [cal dateByAddingComponents:tommorow toDate:fromDate options:0];
+        [tommorow release];
+        
+        dateDict = [NSDictionary dictionaryWithObjectsAndKeys:fromDate, @"fromDate", toDate, @"toDate", nil];
+        
+    }
+    else if (dateRangeType == DateRangeTypeOneWeek) 
+    {
+        // seek for the first day for every weekend. 
+        
+        NSDateComponents *weekDayComponents = [cal components:NSWeekdayCalendarUnit fromDate:now];
+        NSDateComponents *componentsToSubstract = [[NSDateComponents alloc] init];
+        // getting the first day of current week
+        [componentsToSubstract setDay:0 - ([weekDayComponents weekday] - 2)];
+        
+        NSDate *week = [cal dateByAddingComponents:componentsToSubstract toDate:[NSDate date] options:0];
+        // WeekDay will have the same date, time, second as we trigger the method, so we should normalize the components.
+        NSDateComponents *pureWeekComponents = [cal components:(NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit) fromDate:week];
+        NSDate *beginningOfWeek = [cal dateFromComponents:pureWeekComponents];
+        
+        NSDateComponents *pureTodayComponents = [cal components:(NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit) fromDate:[NSDate date]];
+        NSDate *today = [cal dateFromComponents:pureTodayComponents];
+        
+        dateDict = [NSDictionary dictionaryWithObjectsAndKeys:today, @"today", beginningOfWeek, @"beginningOfWeek", nil];
+        
+        [componentsToSubstract release];
+        
+    }
+    
+    // return as dictionary
+    return dateDict;
+}
+
+- (void) updateIncomeLabel {
+ 
+    
+    NSString *income = [self stringForFetchedEntity:@"Income" expressionFunction:@"sum:" keyPath:@"incomeAmount" expressionName:@"incomeTotal" resultDatatype:ResultDataTypeBalance];
+    NSString *expense = [self stringForFetchedEntity:@"Expense" expressionFunction:@"sum:" keyPath:@"expenseAmount" expressionName:@"expenseTotal" resultDatatype:ResultDataTypeNormal];
+    
+    double incomeDouble = [income doubleValue];
+    double expenseDouble = [expense doubleValue];
+    // balance calculation
+    NSInteger balance = [[NSNumber numberWithDouble:incomeDouble] integerValue] - [[NSNumber numberWithDouble:expenseDouble] integerValue];
+    NSString *balanceWithIDcurrency = [SplendidUtils currencyIDFormatWithString:[NSString stringWithFormat:@"%d", balance]];
+    balanceLabel.text = balanceWithIDcurrency;
+}
+
 
 - (void)updateTodayLabel {
-    
-    NSError *error = nil;
-    NSArray *results = [NSArray array];
-    
-    // define which entity we'll deal with
-    NSEntityDescription *expense = [NSEntityDescription entityForName:@"Expense" inManagedObjectContext:self.managedObjectContext];
-    // initialize fetch request *get ready to do some request*
-    NSFetchRequest *fetch = [[[NSFetchRequest alloc] init] autorelease];
-    // pass the entity about to be fetched.
-    [fetch setEntity:expense];
-    [fetch setFetchBatchSize:1];
-    // implements aggregate function :sum
-    NSExpression *expression = [NSExpression expressionForFunction:@"sum:" arguments:[NSArray arrayWithObject:[NSExpression expressionForKeyPath:@"expenseAmount"]]];
-    
-    NSExpressionDescription *expressionDesription = [[[NSExpressionDescription alloc] init] autorelease];
-    [expressionDesription setName:@"totalToday"];
-    [expressionDesription setExpression:expression];
-    [expressionDesription setExpressionResultType: NSDecimalAttributeType];
-    
-    NSArray *properties = [NSArray arrayWithObject:expressionDesription];
-    [fetch setPropertiesToFetch:properties];
-    [fetch setResultType:NSDictionaryResultType];
-    
-    // start request the data
-    results = [self.managedObjectContext executeFetchRequest:fetch error:&error];
-    //NSDictionary *results = [self.managedObjectContext executeFetchRequest:fetch error:&error];
-    NSLog(@"total data retrived -- %d -- ", results.count);
-    NSLog(@"data retrived: %@", results);
-    
-    //
-  //  Expense *expenseObject = [results lastObject];
-  //  NSLog(@"Expense: %@ -- ", expenseObject.expenseAmount);
-    //todayExpenseLabel.text = [[[results objectAtIndex:0] objectForKey:@"totalToday"] description];
-    
-    NSString *resultString = [NSString string];
-    // getting data from NSDictionary type of result
-    //  data retrived: (
-    //      {
-    //      totalToday = 3555;
-    //      }
-    //  )
-    resultString = [[[results objectAtIndex:0] objectForKey:@"totalToday"] description];
-    NSString *stringAppend = [NSString string];
-    // blink animation to show updated expenses
-    if (resultString) {  
-        [UIView animateWithDuration: 0.4 animations: ^{
-        
-            todayExpenseLabel.alpha = 1.0;
-            todayExpenseLabel.alpha = 0.2;
-            todayExpenseLabel.text = [stringAppend stringByAppendingFormat:@"Rp. %@", resultString];
-            todayExpenseLabel.alpha = 1.0; 
-        
-        } completion: ^(BOOL finished){
-    
-       
-       // todayExpenseLabel.backgroundColor = [UIColor clearColor];
-
-    
-        }];
-    }
-    else 
-    {
-        todayExpenseLabel.text = @"No data";
-    }
-        
+  
+    NSString *expenseWithIDcurrency = [SplendidUtils currencyIDFormatWithString:[self stringForFetchedEntity:@"Expense" expressionFunction:@"sum:" keyPath:@"expenseAmount" expressionName:@"totalToday" resultDatatype:ResultDataTypeTodayExpense]];
+    NSString *todayExpense = expenseWithIDcurrency;
+    todayExpenseLabel.text = todayExpense;
+    [self updateIncomeLabel];
+    [self updateWeekLabel];
      
+}
+
+- (void) updateWeekLabel {
+    
+    NSString *weekExpenseWithIDcurrency = [SplendidUtils currencyIDFormatWithString: [self stringForFetchedEntity:@"Expense" expressionFunction:@"sum:" keyPath:@"expenseAmount" expressionName:@"totalWeek" resultDatatype:ResultDataTypeWeekExpense]];
+    NSString * weekExpense = weekExpenseWithIDcurrency;
+    weekLabel.text = weekExpense;
+    
 }
 
 
@@ -360,6 +479,7 @@
     Expense *newExpense = [NSEntityDescription insertNewObjectForEntityForName: @"Expense" inManagedObjectContext: self.managedObjectContext];
     // pass Expense instance to it
     viewController.expense = newExpense;
+    viewController.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
 	UINavigationController *aNavigationController = [[UINavigationController alloc] initWithRootViewController: viewController];
 	[self.navigationController presentModalViewController: aNavigationController animated: YES];
 	
@@ -388,13 +508,40 @@
     if (expense) {
         
         // fetch new data
-       [self performSelector:@selector(updateTodayLabel) withObject:nil afterDelay:1.0];
+       //[self performSelector:@selector(updateTodayLabel) withObject:nil afterDelay:1.0];
+        [self performUpdateActionWithSelector:@selector(updateTodayLabel) withDelay:1.0];
 
     }
 	[self dismissModalViewControllerAnimated:YES];
 }
+
+#pragma mark -
+#pragma mark IncomeViewControllerDelegate
+
+- (void) incomeViewController:(UIViewController *)viewController didSaveIncome:(Income *)income {
+    
+    NSLog(@"DidSaveIncome");
+    if (income) {
+        
+        //[self performSelector:@selector(updateIncomeLabel) withObject:nil afterDelay:1.0];
+        SEL selector = @selector(updateIncomeLabel);
+        [self performUpdateActionWithSelector:selector withDelay:1.0];
+    }
+    
+    [self dismissModalViewControllerAnimated:YES];
+    
+}
+
+// updatehelper;
+- (void) performUpdateActionWithSelector:(SEL)selector withDelay:(NSTimeInterval) delay {
+    
+    [self performSelector:selector withObject:nil afterDelay:delay];
+}
+
 // ================= DUMMY FUNCTION ========================
-// Implemented only for testing
+// =         Implemented only for testing                  =
+// ================= DUMMY FUNCTION ========================
+
 - (void)addNewExpense {
     
     
@@ -480,7 +627,7 @@
 
 - (UILabel *)todayExpenseLabel {
 	
-	CGRect frame = CGRectMake(160.0, 42.0, 100.0, 50.0);
+	CGRect frame = CGRectMake(160.0, 42.0, 139.0, 50.0);
 	todayExpenseLabel  = [[UILabel alloc] init];
 	todayExpenseLabel.frame = frame;
 	todayExpenseLabel.backgroundColor = [UIColor clearColor];
@@ -488,11 +635,47 @@
 	todayExpenseLabel.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:20.0];
     todayExpenseLabel.shadowColor = [UIColor whiteColor];
     todayExpenseLabel.shadowOffset = CGSizeMake(0.0, 1.0);
+    todayExpenseLabel.adjustsFontSizeToFitWidth = YES;
 	//[todayExpenseLabel setText:@"HAHAHAHAHAHAHA"];
 	//[self updateExpenseTransaction];
 	
 	return todayExpenseLabel;
 }
+
+- (UILabel *)balanceLabel {
+    
+    CGRect balanceFrame = CGRectMake(160.0, 3.0, 139.0, 50.0);
+	balanceLabel  = [[UILabel alloc] init];
+	balanceLabel.frame = balanceFrame;
+	balanceLabel.backgroundColor = [UIColor clearColor];
+    balanceLabel.textColor = [UIColor colorWithRed:100.0f/255.0f green:101.0f/255.0f blue:101.0f/255.0f alpha:1.0];
+	balanceLabel.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:20.0];
+    balanceLabel.shadowColor = [UIColor whiteColor];
+    balanceLabel.shadowOffset = CGSizeMake(0.0, 1.0);
+    balanceLabel.adjustsFontSizeToFitWidth = YES;
+    //balanceLabel.text = @"Rp3.000.000";
+    
+    return balanceLabel;
+    
+}
+
+- (UILabel *) weekLabel {
+    
+    CGRect weekFrame = CGRectMake(160.0, 84.0, 139.0, 50.0);
+	weekLabel  = [[UILabel alloc] init];
+	weekLabel.frame = weekFrame;
+	weekLabel.backgroundColor = [UIColor clearColor];
+    weekLabel.textColor = [UIColor colorWithRed:100.0f/255.0f green:101.0f/255.0f blue:101.0f/255.0f alpha:1.0];
+	weekLabel.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:20.0];
+    weekLabel.shadowOffset = CGSizeMake(0.0, 1.0);
+    weekLabel.shadowColor = [UIColor whiteColor];
+    weekLabel.adjustsFontSizeToFitWidth = YES;
+    
+    
+    return weekLabel;
+}
+
+
 
 - (void)didReceiveMemoryWarning {
     // Releases the view if it doesn't have a superview.

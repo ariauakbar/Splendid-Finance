@@ -10,6 +10,7 @@
 #import "SplendidAppDelegate.h"
 
 
+
 @interface TransactionViewController : UITableViewController <NSFetchedResultsControllerDelegate> {
 
     NSArray *transactions;

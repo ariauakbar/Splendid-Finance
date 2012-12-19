@@ -7,6 +7,10 @@
 //
 
 #import "TransactionViewController.h"
+#import "TransactionDetailViewController.h"
+#import "AddNewExpenseViewController.h"
+#import "Expense.h"
+#import "SplendidUtils.h"
 
 
 @implementation TransactionViewController
@@ -22,14 +26,17 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    NSLog(@"viewDidLoad");
     //self.tableView.bounces = NO;
-    self.tableView.backgroundColor = [UIColor clearColor];	self.view.backgroundColor = [UIColor clearColor];
+     self.view.backgroundColor = [UIColor clearColor];
+    self.tableView.backgroundColor = [UIColor clearColor];	
     self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
     self.tableView.rowHeight = 50.0;
-    //self.tableView.bounces = NO;
-    self.tableView.backgroundColor = [UIColor clearColor];
-    self.view.backgroundColor = [UIColor clearColor];
     
+    //self.tableView.bounces = NO;
+    //self.tableView.scrollIndicatorInsets = UIEdgeInsetsMake(0.0, 0.0, 216.0, 0.0); 
+    //self.tableView.indicatorStyle = UIScrollViewIndicatorStyleBlack;
+   // self.title = @"List";
     UIImage *bodyImage = [UIImage imageNamed:@"body_background.png"];
 	UIImageView *bodyImageView = [[UIImageView alloc] initWithImage:bodyImage];
 	bodyImageView.frame = self.view.bounds;
@@ -40,35 +47,23 @@
 	
   
     [self.tabBarItem setTitleTextAttributes:[NSDictionary dictionaryWithObject:[UIColor blackColor] forKey:UITextAttributeTextColor] forState:UIControlStateNormal];
-	self.view.backgroundColor = [UIColor whiteColor];
-	UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 300, 44)];
+	UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 150, 44)];
 	titleLabel.textAlignment = UITextAlignmentCenter;
-	titleLabel.shadowColor = [UIColor blackColor];
-	titleLabel.shadowOffset = CGSizeMake(0, -1);
-	[titleLabel setText:@"Transaction"];
-	titleLabel.textColor = [UIColor whiteColor];
+	titleLabel.shadowColor = [UIColor colorWithRed:186.0f/255.0f green:204.0f/255.0f blue:215.0f/255.0f alpha:1.0f];
+	titleLabel.shadowOffset = CGSizeMake(0.0, 1.0);
+	[titleLabel setText:@"Transactions"];
+	titleLabel.textColor = [UIColor colorWithRed:69.0f/255.0f green:74.0f/255.0f blue:77.0f/255.0f alpha:1.0f];
 	titleLabel.backgroundColor = [UIColor clearColor];
-	titleLabel.font = [UIFont fontWithName:@"Baskerville-Italic" size:32];
+    titleLabel.alpha = 0.5;
+	titleLabel.font = [UIFont fontWithName:@"HelveticaNeue-Bold" size:22];
 	
 	self.navigationItem.titleView = titleLabel;
+	//self.navigationItem.backBarButtonItem.title = @"List";
+    
+	//self.navigationItem.titleView = titleLabel;
 	
 	[titleLabel release];
     
-    
-  //  self.transactions = [NSArray arrayWithObjects:@"Rp.2000,00", @"Rp.35000,00", @"Rp.56000", @"Rp.67000", @"Rp.35000", nil];
-	
-	//self.title = @"Splendid";
-   	self.catIcon = [NSArray arrayWithObjects:@"food_3.png", @"commute.png", @"home_6.png", nil];
-}
-
-
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
-    
-    //[self updateTransactions];
-   // [self.tableView reloadData];
-    //[self.tableView beginUpdates];
-    NSLog(@"ViewWillAppear");
     
     NSError *error = nil;
 	if (![[self fetchedResultsController] performFetch:&error]) {
@@ -80,6 +75,27 @@
 		NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
 		abort();
 	}
+    
+    
+    
+  //  self.transactions = [NSArray arrayWithObjects:@"Rp.2000,00", @"Rp.35000,00", @"Rp.56000", @"Rp.67000", @"Rp.35000", nil];
+	
+	//self.title = @"Splendid";
+   	self.catIcon = [NSArray arrayWithObjects:@"food_3.png", @"commute.png", @"home_6.png", nil];
+    
+    
+
+}
+
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    
+    //[self updateTransactions];
+   // [self.tableView reloadData];
+    //[self.tableView beginUpdates];
+    NSLog(@"ViewWillAppear");
+  
 }
 
 /*
@@ -124,10 +140,18 @@
 
 - (void)configureCell:(UITableViewCell *)cell atIndexPath:(NSIndexPath *)indexPath { 
     
-    NSManagedObject *managedObject = [self.fetchedResultsController objectAtIndexPath:indexPath];
-    NSString *expenseText = [[managedObject valueForKey:@"expenseAmount"] description];
-    cell.textLabel.text = [NSString stringWithFormat:@"Rp. %@", expenseText];
+    Expense *expense = [self.fetchedResultsController objectAtIndexPath:indexPath];
+    NSString *expenseText = [[expense valueForKey:@"expenseAmount"] description];
     
+    NSLocale *locale = [[NSLocale alloc] initWithLocaleIdentifier:@"id_ID"];
+    NSNumberFormatter *numF = [[[NSNumberFormatter alloc] init] autorelease];
+    [numF setLocale:locale];
+    [locale release];
+    [numF setNumberStyle:NSNumberFormatterCurrencyStyle];
+    double stringDouble = [expenseText doubleValue];
+    cell.textLabel.text = [numF stringFromNumber:[NSNumber numberWithDouble:stringDouble]];
+    cell.imageView.image = [UIImage imageNamed:[SplendidUtils getImageNameForCategory:[expense.category valueForKey:@"name"]]];
+    //NSLog(@"%@", );
     
 }
 
@@ -151,6 +175,7 @@
         cell.textLabel.textAlignment = UITextAlignmentLeft;
         
         //NSIndexPath *defaultIndex = []
+        /*
         NSLog(@"Path: -- %d and count: %d", indexPath.row, self.catIcon.count);
         if (indexPath.row >= self.catIcon.count) {
             cell.imageView.image = [UIImage imageNamed:[self.catIcon objectAtIndex:0]];        }
@@ -158,20 +183,39 @@
             NSLog(@"Current Path: %d", indexPath.row);
             cell.imageView.image = [UIImage imageNamed:[self.catIcon objectAtIndex:indexPath.row]];
         }
+         */
+        
+        
+        if (indexPath.row == 3) {
+            
+            UILabel *dateLabel = [[UILabel alloc] initWithFrame:CGRectMake(250.0, 4.0, 60, 40)];
+            [dateLabel setText:@"income"];
+            dateLabel.textColor = [UIColor grayColor];
+            dateLabel.shadowColor = [UIColor whiteColor];
+            dateLabel.shadowOffset = CGSizeMake(0.0, 1.0);
+            dateLabel.backgroundColor = [UIColor clearColor];
+            dateLabel.font = [UIFont fontWithName:@"HelveticaNeue-LightItalic" size:13.0];
+            
+            [cell.contentView addSubview:dateLabel];
+        }
+        
+        [self configureCell:cell atIndexPath:indexPath];
            
     }
     
-    // Configure the cell...
-    [self configureCell:cell atIndexPath:indexPath];
-    
+    cell.selectionStyle = UITableViewCellSelectionStyleGray;
+
     UIImage *backgroundCell = [[UIImage imageNamed:@"cell_bg_5.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(1.0, 1.0, 1.0, 1.0)];
     cell.backgroundColor = [UIColor clearColor];
     // if (indexPath.row % 2 == 0) {
-    cell.backgroundView = [[UIImageView alloc] initWithImage:backgroundCell];
+    cell.backgroundView = [[[UIImageView alloc] initWithImage:backgroundCell] autorelease];
     cell.backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     //cell.backgroundColor = [UIColor colorWithRed:151.0/255.0 green:152.0/255.0 blue:155.0/255.0 alpha:1.0];
     cell.backgroundColor = [UIColor clearColor];
     cell.frame = cell.bounds;
+
+    
+    
     
     /* }
      else {
@@ -263,6 +307,32 @@
     [self.navigationController pushViewController:detailViewController animated:YES];
     [detailViewController release];
     */
+    
+    Expense *expense = (Expense *)[fetchedResultsController objectAtIndexPath:indexPath];
+    
+    /*
+    AddNewExpenseViewController *newExpense = [[AddNewExpenseViewController alloc] init];
+    UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController:newExpense];
+    newExpense.expense = expense;
+    [newExpense release];
+    [self presentModalViewController:navController animated:YES];
+    [navController release];
+     */
+    
+    TransactionDetailViewController *transDetail = [[TransactionDetailViewController alloc] init];
+    transDetail.expense = expense;
+    [self.navigationController pushViewController:transDetail animated:YES];
+    [transDetail release];
+    
+    
+    
+    /*
+    TransactionDetailViewController *transDetailController = [[TransactionDetailViewController alloc] init];
+    UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController:transDetailController];
+    [transDetailController release];
+    [self presentModalViewController:navController animated:YES];
+    [navController release];
+     */
 }
 
 #pragma mark -
@@ -355,7 +425,27 @@
 	[self.tableView endUpdates];
 }
 
+- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
+    // Return YES if you want the specified item to be editable.
+    return YES;
+}
 
+// Override to support editing the table view.
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (editingStyle == UITableViewCellEditingStyleDelete) {
+        //add code here for when you hit delete
+        NSError *error = nil;
+        
+        Expense *expense = (Expense *)[fetchedResultsController objectAtIndexPath:indexPath];
+        [expense.managedObjectContext deleteObject:expense];
+        
+        if (![expense.managedObjectContext save:&error]) {
+            
+            NSLog(@"Unresolved error %@, %@", error, [error userInfo]);
+            abort();
+        }
+    }    
+}
 
 #pragma mark -
 #pragma mark Memory management
@@ -363,6 +453,7 @@
 - (void)didReceiveMemoryWarning {
     // Releases the view if it doesn't have a superview.
     [super didReceiveMemoryWarning];
+    NSLog(@"didReceiveMemoryWarning");
     
     // Relinquish ownership any cached data, images, etc. that aren't in use.
 }
